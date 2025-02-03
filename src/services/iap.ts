@@ -196,7 +196,7 @@ const getAvailablePurchase = () => {
 };
 
 const getSubscription = () => {
-  return getSubscriptions({skus: subscriptionIDs})
+  return getSubscriptions({skus: [...subscriptionIDs, ...inAppIDs]})
     .then(subs => {
       console.log('get subscriptions Response : ', subs);
       return subs;

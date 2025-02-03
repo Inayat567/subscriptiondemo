@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -7,162 +7,100 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
-  Platform,
 } from 'react-native';
-import {OS} from '../../utils';
+import {getSubscription} from '../../services/iap';
+import {Subscription} from 'react-native-iap';
 
 const {width} = Dimensions.get('window');
 
+type FormattedSubscription = {
+  title: string;
+  data: {
+    title: string;
+    price: any;
+    description: string;
+  }[];
+};
+
 const Product = () => {
-  const androidSub = [
-    'monthly (mode 1)',
-    'yearly (mode 1)',
-    'monthly (mode 2)',
-    'yearly (mode 2)',
-  ];
-  const androidInApp = [
-    '2 year (mode 1)',
-    '3 year (mode 1)',
-    '2 year (mode 2)',
-    '3 year (mode 2)',
-  ];
-  const iosSub = [
-    'monthly (mode 1)',
-    'yearly (mode 1)',
-    'monthly (mode 2)',
-    'yearly (mode 2)',
-  ];
-  const iosInApp = [
-    '2 year (mode 1)',
-    '3 year (mode 1)',
-    '2 year (mode 2)',
-    '3 year (mode 2)',
-  ];
-
-  const subscriptionData = [
-    {
-      title: 'Mode 1 Renewable Subscriptions',
-      data:
-        Platform.OS === OS.ios
-          ? [
-              {
-                title: iosSub[0],
-                price: '$1.99',
-                description: 'Billed every month',
-              },
-              {
-                title: iosSub[1],
-                price: '$9.99',
-                description: 'Billed every year',
-              },
-            ]
-          : [
-              {
-                title: androidSub[0],
-                price: '$1.99',
-                description: 'Billed every month',
-              },
-              {
-                title: androidSub[1],
-                price: '$9.99',
-                description: 'Billed every year',
-              },
-            ],
-    },
-    {
-      title: 'Mode 2 Renewable Subscriptions',
-      data:
-        Platform.OS === OS.ios
-          ? [
-              {
-                title: iosSub[2],
-                price: '$2.99',
-                description: 'Billed every month',
-              },
-              {
-                title: iosSub[3],
-                price: '$29.99',
-                description: 'Billed every year',
-              },
-            ]
-          : [
-              {
-                title: androidSub[2],
-                price: '$2.99',
-                description: 'Billed every month',
-              },
-              {
-                title: androidSub[3],
-                price: '$29.99',
-                description: 'Billed every year',
-              },
-            ],
-    },
-    {
-      title: 'Mode 1 Non-Renewable Subscriptions',
-      data:
-        Platform.OS === OS.ios
-          ? [
-              {
-                title: iosInApp[0],
-                price: '$49.99',
-                description: 'One-time purchase for 2 years',
-              },
-              {
-                title: iosInApp[1],
-                price: '$69.99',
-                description: 'One-time purchase for 3 years',
-              },
-            ]
-          : [
-              {
-                title: androidInApp[0],
-                price: '$49.99',
-                description: 'One-time purchase for 2 years',
-              },
-              {
-                title: androidInApp[1],
-                price: '$69.99',
-                description: 'One-time purchase for 3 years',
-              },
-            ],
-    },
-    {
-      title: 'Mode 2 Non-Renewable Subscriptions',
-      data:
-        Platform.OS === OS.ios
-          ? [
-              {
-                title: iosInApp[2],
-                price: '$49.99',
-                description: 'One-time purchase for 2 years',
-              },
-              {
-                title: iosInApp[3],
-                price: '$59.99',
-                description: 'One-time purchase for 3 years',
-              },
-            ]
-          : [
-              {
-                title: androidInApp[2],
-                price: '$49.99',
-                description: 'One-time purchase for 2 years',
-              },
-              {
-                title: androidInApp[3],
-                price: '$59.99',
-                description: 'One-time purchase for 3 years',
-              },
-            ],
-    },
-  ];
-
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [subscriptions, setSubscriptions] = useState<FormattedSubscription[]>([]);
 
-  const handleSubscribe = () => {
+  useEffect(() => {
+    const getAllSubscription = async () => {
+      console.log("first")
+      const subscriptions = await getSubscription();
+      const formattedSubscriptions =
+        subscriptions && formatSubscriptionData(subscriptions);
+      console.log('first: ', formattedSubscriptions);
+      formattedSubscriptions && setSubscriptions(formattedSubscriptions);
+    };
+
+    getAllSubscription();
+  }, []);
+
+  const formatSubscriptionData = (subscriptions: Subscription[]) => {
+    subscriptions?.map(sub=>{
+      console.log("SUB : ", sub)
+    })
+    const mode1Renewable = subscriptions.filter(
+      sub => sub.productId.includes('mode_1') && sub.type === 'subs',
+    );
+    const mode2Renewable = subscriptions.filter(
+      sub => sub.productId.includes('mode_2') && sub.type === 'subs',
+    );
+    const mode1NonRenewable = subscriptions.filter(
+      sub => sub.productId.includes('mode_1') && sub.type !== 'subs',
+    );
+    const mode2NonRenewable = subscriptions.filter(
+      sub => sub.productId.includes('mode_2') && sub.type !== 'subs',
+    );
+
+    return [
+      {
+        title: 'Mode 1 Renewable Subscriptions',
+        data: mode1Renewable.map(sub => ({
+          title: sub.title,
+          price: sub.localizedPrice,
+          description: sub.description,
+        })),
+      },
+      {
+        title: 'Mode 2 Renewable Subscriptions',
+        data: mode2Renewable.map(sub => ({
+          title: sub.title,
+          price: sub.localizedPrice,
+          description: sub.description,
+        })),
+      },
+      {
+        title: 'Mode 1 Non-Renewable Subscriptions',
+        data: mode1NonRenewable.map(sub => ({
+          title: sub.title,
+          price: sub.localizedPrice,
+          description: sub.description,
+        })),
+      },
+      {
+        title: 'Mode 2 Non-Renewable Subscriptions',
+        data: mode2NonRenewable.map(sub => ({
+          title: sub.title,
+          price: sub.localizedPrice,
+          description: sub.description,
+        })),
+      },
+    ];
+  };
+  
+
+  const handleSubscribe = async () => {
+    const subscriptions = await getSubscription();
+    console.log('subscriptions : ', subscriptions);
     if (selectedPlan) {
-      Alert.alert('Selected Plan', `You selected: ${selectedPlan}, will work once get subscription detail`);
+      Alert.alert(
+        'Selected Plan',
+        `You selected: ${selectedPlan}, will work once get subscription detail`,
+      );
     } else {
       Alert.alert('No Plan Selected', 'Please select a plan to subscribe.');
     }
@@ -193,7 +131,7 @@ const Product = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={subscriptionData}
+        data={subscriptions}
         renderItem={renderItem}
         keyExtractor={(item, index) => index.toString()}
         horizontal
@@ -209,7 +147,12 @@ const Product = () => {
         onPress={handleSubscribe}>
         <Text style={styles.subscribeButtonText}>Subscribe</Text>
       </TouchableOpacity>
-      <View style={{flexDirection: 'row', justifyContent: 'space-around', marginTop: 10}}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginTop: 10,
+        }}>
         <TouchableOpacity>
           <Text>Privacy Policy</Text>
         </TouchableOpacity>
