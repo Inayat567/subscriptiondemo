@@ -1,4 +1,4 @@
-package com.subscriptiondemo
+package com.subscriptiondemo567
 
 import android.app.Application
 import com.facebook.react.PackageList
