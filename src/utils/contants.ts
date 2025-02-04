@@ -6,5 +6,4 @@ export const urls = {
   iosUnscriptionUrl: '',
   androidUnscriptionUrl: '',
   androidRedeemUrl:"",
-  
 };

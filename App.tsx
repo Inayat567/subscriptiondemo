@@ -10,6 +10,7 @@ import {View, StyleSheet} from 'react-native';
 import Root from './src/navigation/Root';
 import {NavigationContainer} from '@react-navigation/native';
 import {closeIapConnection, initIapConnection} from './src/services/iap';
+import { setup } from 'react-native-iap';
 
 const App = (): React.JSX.Element => {
   useEffect(() => {
@@ -27,6 +28,7 @@ const App = (): React.JSX.Element => {
   }, []);
 
   const init = () => {
+    setup({storekitMode: 'STOREKIT2_MODE'})
     initIapConnection()
       .then(res => {
         console.log('IAP initialzed');

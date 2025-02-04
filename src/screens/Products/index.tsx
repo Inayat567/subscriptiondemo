@@ -7,42 +7,63 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import {getSubscription} from '../../services/iap';
+import {
+  getSubscription,
+  handleRestore,
+  iapRequestSubscription,
+  redeemPromoCode,
+} from '../../services/iap';
 import {Subscription} from 'react-native-iap';
-
-const {width} = Dimensions.get('window');
+import {colors, width} from '../../utils';
 
 type FormattedSubscription = {
   title: string;
-  data: {
-    title: string;
-    price: any;
-    description: string;
-  }[];
+  price: any;
+  description: string;
+  productId: string;
+};
+
+type FormattedSubscriptions = {
+  title: string;
+  data: FormattedSubscription[];
+};
+
+type Subscriptions = Subscription & {
+  type: string;
+  productId: string;
+  localizedPrice: string;
 };
 
 const Product = () => {
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [subscriptions, setSubscriptions] = useState<FormattedSubscription[]>([]);
+  const [selectedPlan, setSelectedPlan] =
+    useState<FormattedSubscription | null>(null);
+  const [isLoading, setIsloading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+
+  const [subscriptions, setSubscriptions] = useState<FormattedSubscriptions[]>(
+    [],
+  );
 
   useEffect(() => {
     const getAllSubscription = async () => {
-      console.log("first")
+      console.log('first');
       const subscriptions = await getSubscription();
       const formattedSubscriptions =
         subscriptions && formatSubscriptionData(subscriptions);
       console.log('first: ', formattedSubscriptions);
       formattedSubscriptions && setSubscriptions(formattedSubscriptions);
+      setIsloading(false);
     };
 
     getAllSubscription();
   }, []);
 
-  const formatSubscriptionData = (subscriptions: Subscription[]) => {
-    subscriptions?.map(sub=>{
-      console.log("SUB : ", sub)
-    })
+  const formatSubscriptionData = (subscriptions: Subscriptions[]) => {
+    subscriptions?.map(sub => {
+      console.log('SUB : ', sub);
+    });
     const mode1Renewable = subscriptions.filter(
       sub => sub.productId.includes('mode_1') && sub.type === 'subs',
     );
@@ -63,6 +84,7 @@ const Product = () => {
           title: sub.title,
           price: sub.localizedPrice,
           description: sub.description,
+          productId: sub.productId,
         })),
       },
       {
@@ -71,6 +93,7 @@ const Product = () => {
           title: sub.title,
           price: sub.localizedPrice,
           description: sub.description,
+          productId: sub.productId,
         })),
       },
       {
@@ -79,6 +102,7 @@ const Product = () => {
           title: sub.title,
           price: sub.localizedPrice,
           description: sub.description,
+          productId: sub.productId,
         })),
       },
       {
@@ -87,42 +111,46 @@ const Product = () => {
           title: sub.title,
           price: sub.localizedPrice,
           description: sub.description,
+          productId: sub.productId,
         })),
       },
     ];
   };
-  
 
   const handleSubscribe = async () => {
-    const subscriptions = await getSubscription();
-    console.log('subscriptions : ', subscriptions);
     if (selectedPlan) {
-      Alert.alert(
-        'Selected Plan',
-        `You selected: ${selectedPlan}, will work once get subscription detail`,
+      setIsFetching(true);
+      const hasSubscription = await iapRequestSubscription(
+        selectedPlan.productId,
       );
+      setIsFetching(false);
+      console.log('response : ', hasSubscription);
     } else {
       Alert.alert('No Plan Selected', 'Please select a plan to subscribe.');
     }
   };
 
-  const renderItem = ({item}) => (
-    <View style={styles.page}>
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: FormattedSubscriptions;
+    index: number;
+  }) => (
+    <View style={styles.page} key={index}>
       <Text style={styles.pageTitle}>{item.title}</Text>
-      {item.data.map((sub, index) => (
+      {item.data.map((sub: FormattedSubscription, index: number) => (
         <TouchableOpacity
           key={index}
           style={[
             styles.subscriptionItem,
-            selectedPlan === sub.title && styles.selectedSubscriptionItem,
+            selectedPlan?.title === sub.title &&
+              styles.selectedSubscriptionItem,
           ]}
-          onPress={() => setSelectedPlan(sub.title)}>
+          onPress={() => setSelectedPlan(sub)}>
           <Text style={styles.subscriptionText}>{sub.title}</Text>
           <Text style={styles.subscriptionText}>{sub.price}</Text>
           <Text style={styles.subscriptionText}>{sub.description}</Text>
-          {selectedPlan === sub.title && (
-            <Text style={styles.selectedText}>Selected</Text>
-          )}
         </TouchableOpacity>
       ))}
     </View>
@@ -130,22 +158,43 @@ const Product = () => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={subscriptions}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={width * 0.85 + 20} // Adjusted for margin
-        snapToAlignment="start"
-        decelerationRate="fast"
-        contentContainerStyle={styles.flatListContent}
-      />
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginBottom: 10,
+        }}>
+        <TouchableOpacity onPress={() => redeemPromoCode()}>
+          <Text>Redeem</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleRestore()}>
+          <Text>Restore</Text>
+        </TouchableOpacity>
+      </View>
+      {isLoading ? (
+        <ActivityIndicator size={'large'} color={colors.primary} />
+      ) : (
+        <FlatList
+          data={subscriptions}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={width * 0.85 + 20} // Adjusted for margin
+          snapToAlignment="start"
+          decelerationRate="fast"
+          contentContainerStyle={styles.flatListContent}
+        />
+      )}
       <TouchableOpacity
         style={styles.subscribeButton}
         onPress={handleSubscribe}>
-        <Text style={styles.subscribeButtonText}>Subscribe</Text>
+        {isFetching ? (
+          <ActivityIndicator size={'small'} color={colors.primary} />
+        ) : (
+          <Text style={styles.subscribeButtonText}>Subscribe</Text>
+        )}
       </TouchableOpacity>
       <View
         style={{

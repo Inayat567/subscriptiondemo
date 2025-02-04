@@ -1,4 +1,4 @@
-import {EmitterSubscription, Linking, Platform} from 'react-native';
+import {Alert, EmitterSubscription, Linking, Platform} from 'react-native';
 import {
   purchaseUpdatedListener,
   purchaseErrorListener,
@@ -16,11 +16,10 @@ import {
   acknowledgePurchaseAndroid,
   presentCodeRedemptionSheetIOS,
 } from 'react-native-iap';
-import {OS, urls} from '../utils';
-// import {
-//   subscriptionServerValidation,
-//   updateUserToPremium,
-// } from '../services/apis';
+import {OS, storage, urls} from '../utils';
+import {subscriptionServerValidation} from './axios'
+
+const keyName = 'subscription';
 
 const androidSub = [
   'mode1-sub-12m',
@@ -34,7 +33,7 @@ const androidInApp = [
   'mode2_2yr_onetime',
   'mode2_3yr_onetime',
 ];
-const iosSub = ['mode_1_m1', 'mode_1_y1','mode_2_m1', 'mode_2_y1'];
+const iosSub = ['mode_1_m1', 'mode_1_y1', 'mode_2_m1', 'mode_2_y1'];
 const iosInApp = ['mode_1_2y', 'mode_1_3y', 'mode_2_2y', 'mode_2_3y'];
 
 const subscriptionIDs = Platform.OS === OS.android ? androidSub : iosSub;
@@ -82,7 +81,6 @@ const initIapConnection = async () => {
           .then(() => {
             console.log('Cleared pending payments from billing skd');
             return updateListener();
-            // return true;
           })
           .catch(e => {
             console.log('Error while clearing pending payments: ', e);
@@ -112,75 +110,71 @@ const removeSubscriptionListener = () => {
 };
 
 const handleSubscriptionPurchase = async (purchase: Purchase) => {
-  // if (Platform.OS === OS.android && purchase?.purchaseToken) {
-  //   //call Backend API
+  if (Platform.OS === OS.android && purchase?.purchaseToken) {
+    //call Backend API
 
-  //   const userId = "5";
-  //   const serverResponse = await subscriptionServerValidation(
-  //     purchase.packageNameAndroid || '',
-  //     purchase.productId,
-  //     purchase.purchaseToken || '',
-  //   );
-  //   if (serverResponse.success) {
-  //     await updateUserToPremium(userId!, true);
-  //     acknowledgePurchaseAndroid({token: purchase.purchaseToken!})
-  //       .then(res => {
-  //         console.log('acknowledged purchase android', res);
-  //       })
-  //       .catch(error => {
-  //         console.log('error acknowledging purchase android', error);
-  //       });
+    const userId = '5';
+    const serverResponse = await subscriptionServerValidation(
+      purchase.packageNameAndroid || '',
+      purchase.productId,
+      purchase.purchaseToken || '',
+    );
+    if (serverResponse.success) {
+      // await updateUserToPremium(userId!, true);
+      acknowledgePurchaseAndroid({token: purchase.purchaseToken!})
+        .then(res => {
+          console.log('acknowledged purchase android', res);
+        })
+        .catch(error => {
+          console.log('error acknowledging purchase android', error);
+        });
 
-  //     const realmData = realm.objects(keyName);
-  //     const currentDate = new Date();
-  //     const validatedRealmData = {
-  //       planId: 'monthly', // weakly, monthly, yearly
-  //       // userId: userId,
-  //       startDate: new Date(
-  //         Number(serverResponse.data?.startTimeMillis),
-  //       ).toString(),
-  //       endDate: new Date(
-  //         Number(serverResponse.data?.expiryTimeMillis),
-  //       ).toString(),
-  //       token: purchase.purchaseToken,
-  //       status: true,
-  //       price: serverResponse.data?.priceAmountMicros / 1000000,
-  //       currency: serverResponse.data?.priceCurrencyCode,
-  //       productId: purchase.productId,
-  //       modified: currentDate.toString(),
-  //       packageName: purchase.packageNameAndroid || '',
-  //     };
+      const localData = storage.getString(keyName);
+      const parsedData = localData ? JSON.parse(localData) : undefined;
+      const currentDate = new Date();
+      const validatedLocalData = {
+        planId: 'monthly', // weakly, monthly, yearly
+        // userId: userId,
+        startDate: new Date(
+          Number(serverResponse.data?.startTimeMillis),
+        ).toString(),
+        endDate: new Date(
+          Number(serverResponse.data?.expiryTimeMillis),
+        ).toString(),
+        token: purchase.purchaseToken,
+        status: true,
+        price: serverResponse.data?.priceAmountMicros / 1000000,
+        currency: serverResponse.data?.priceCurrencyCode,
+        productId: purchase.productId,
+        modified: currentDate.toString(),
+        packageName: purchase.packageNameAndroid || '',
+      };
+      storage.set(keyName, JSON.stringify(validatedLocalData));
+    } else {
+      // await updateUserToPremium(userId!, false);
+    }
 
-  //     if (realmData.length !== 0) {
-  //       updateSubscription(validatedRealmData);
-  //     } else {
-  //       saveSubscription(validatedRealmData);
-  //     }
-  //   } else {
-  //     await updateUserToPremium(userId!, false);
-  //   }
+    console.log('server Validation rsponse : ', serverResponse);
 
-  //   console.log('server Validation rsponse : ', serverResponse);
-
-  //   // await setExpiryDate(ExpiryDate);  //update async storage÷
-  //   //for unConsumable
-  //   finishTransaction({purchase, isConsumable: false})
-  //     .then(() => console.log('clear unConsumable transaction'))
-  //     .catch(e =>
-  //       console.log('Error while clearing unConsumable transaction: ', e),
-  //     );
-  //   console.log('Clear transaction');
-  // } else {
-  //   const receiptBody = {
-  //     'receipt-data': purchase.transactionReceipt,
-  //     password: 'c94989ae880549f092c0070b702be928', // app shared secret, can be found in App Store Connect
-  //   };
-  //   let res = await validateReceiptIos({receiptBody, isTest: true});
-  //   console.log(
-  //     'Validate Receipt Response from listener : ',
-  //     res?.latest_receipt_info,
-  //   );
-  // }
+    // await setExpiryDate(ExpiryDate);  //update async storage÷
+    //for unConsumable
+    finishTransaction({purchase, isConsumable: false})
+      .then(() => console.log('clear unConsumable transaction'))
+      .catch(e =>
+        console.log('Error while clearing unConsumable transaction: ', e),
+      );
+    console.log('Clear transaction');
+  } else {
+    const receiptBody = {
+      'receipt-data': purchase.transactionReceipt,
+      password: '9182b02a2a674dfe821cfbf71da56d3f', // app shared secret, can be found in App Store Connect
+    };
+    let res = await validateReceiptIos({receiptBody, isTest: true}); // change isTest to false in production mode
+    console.log(
+      'Validate Receipt Response from listener : ',
+      res?.latest_receipt_info,
+    );
+  }
   closeIapConnection().then(() => initConnection());
 };
 
@@ -207,36 +201,9 @@ const getSubscription = () => {
     });
 };
 
-// const getProduct = (sku: number) => {
-//   return getProducts({skus: [subscriptionIDs[sku]]})
-//     .then(prod => {
-//       console.log('Response : ', prod);
-//       return prod;
-//     })
-//     .catch(e => {
-//       console.log('Error in getting products: ', e);
-//       return null;
-//     });
-// };
-
-// const iapRequestPurchase = (sku: number) => {
-//   return requestPurchase({
-//     sku: subscriptionIDs[sku],
-//     andDangerouslyFinishTransactionAutomaticallyIOS: false,
-//   })
-//     .then(res => {
-//       console.log('Request Purchase response: ', res);
-//       return true;
-//     })
-//     .catch(e => {
-//       console.log('Failed to request purchase : ', e);
-//       return false;
-//     });
-// };
-
-const iapRequestSubscription = (sku: number) => {
+const iapRequestSubscription = (sku: string) => {
   try {
-    return getSubscriptions({skus: [subscriptionIDs[sku]!]})
+    return getSubscriptions({skus: [sku]})
       .then((subscription: any) => {
         console.log('subscriptions : ', subscription);
         let offerToken =
@@ -247,13 +214,13 @@ const iapRequestSubscription = (sku: number) => {
         let payload =
           Platform.OS === OS.android
             ? {
-                sku: subscriptionIDs[sku],
+                sku: sku,
                 ...(offerToken && {
-                  subscriptionOffers: [{sku: subscriptionIDs[sku], offerToken}],
+                  subscriptionOffers: [{sku: sku, offerToken}],
                 }),
               }
             : {
-                sku: subscriptionIDs[sku],
+                sku: sku,
               };
         return requestSubscription(payload)
           .then(async res => {
@@ -342,6 +309,7 @@ const redeemPromoCode = async (promoCode?: string) => {
 
 const handleRestore = async () => {
   const hasAlreadySubscription = verifySubscriptionsInRealm();
+  console.log("hasAlreadySubscription : ", hasAlreadySubscription)
   let availablePurchases = [];
   if (hasAlreadySubscription) {
     return;
@@ -353,7 +321,7 @@ const handleRestore = async () => {
   }
   if (availablePurchases.length === 0) {
     // NO SUBSCRIPTION
-    console.log('no subscription');
+    Alert.alert("No subscription", "You don't have any subscription before or expired")
     return null;
   } else {
     handleSubscriptionPurchase(availablePurchases[0]!);
@@ -363,29 +331,29 @@ const handleRestore = async () => {
 };
 
 const verifySubscriptionsInRealm = () => {
-  // try {
-  //   const isSubscribed = realm.objects(keyName);
-  //   console.log('realms data : ', isSubscribed);
-  //   if (isSubscribed.length !== 0) {
-  //     const subscriptionValidTimeStr: string = isSubscribed[0]!
-  //       .endDate as string;
+  try {
+    const localData = storage.getString(keyName);
+    const parsedData = localData ? JSON.parse(localData) : null;
+    console.log('realms data : ', parsedData);
+    if (parsedData) {
+      const subscriptionValidTimeStr: string = parsedData!
+        .endDate as string;
 
-  //     const subscriptionValidTime = new Date(subscriptionValidTimeStr);
-  //     const currentTime = new Date();
+      const subscriptionValidTime = new Date(subscriptionValidTimeStr);
+      const currentTime = new Date();
 
-  //     if (subscriptionValidTime >= currentTime) {
-  //       return true;
-  //     } else {
-  //       return false;
-  //     }
-  //   } else {
-  //     return false;
-  //   }
-  // } catch (error) {
-  //   console.log('Error in verifying subscription : ', error);
-  //   return false;
-  // }
-  return false;
+      if (subscriptionValidTime >= currentTime) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log('Error in verifying subscription : ', error);
+    return false;
+  }
 };
 
 export {
