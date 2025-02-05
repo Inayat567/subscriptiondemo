@@ -5,12 +5,18 @@
  * @format
  */
 
-import React, {useEffect} from 'react';
-import {View, StyleSheet} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, StyleSheet, Platform, StatusBar} from 'react-native';
 import Root from './src/navigation/Root';
 import {NavigationContainer} from '@react-navigation/native';
-import {closeIapConnection, initIapConnection} from './src/services/iap';
-import { setup } from 'react-native-iap';
+import {
+  closeIapConnection,
+  initIapConnection,
+  keyName,
+  verifyUserSubscriptionValidation,
+} from './src/services/iap';
+import {setup} from 'react-native-iap';
+import {OS, storage} from './src/utils';
 
 const App = (): React.JSX.Element => {
   useEffect(() => {
@@ -28,17 +34,30 @@ const App = (): React.JSX.Element => {
   }, []);
 
   const init = () => {
-    setup({storekitMode: 'STOREKIT2_MODE'})
+    const localData = storage.getString(keyName);
+    const parsedData = localData ? JSON.parse(localData) : null;
+    console.log('local data : ', parsedData);
+
+    if (Platform.OS === OS.ios) {
+      setup({storekitMode: 'STOREKIT2_MODE'});
+    }
+
     initIapConnection()
-      .then(res => {
-        console.log('IAP initialzed');
+      .then(async res => {
+        console.log('IAP initialzed: ', res);
+        
+        //  you can use this method to check whether user is premium or not
+        const isPremium = await verifyUserSubscriptionValidation();
+        console.log('user premium status : ', isPremium);
       })
       .catch(error => {
         console.log('Error initializing IAP', error);
       });
   };
+
   return (
     <View style={styles.container}>
+      <StatusBar barStyle={'dark-content'}/>
       <NavigationContainer>
         <Root />
       </NavigationContainer>

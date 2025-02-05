@@ -7,12 +7,12 @@ const Stack = createNativeStackNavigator();
 
 const Root = () => {
   return (
-    <Stack.Navigator initialRouteName={rootScreens.product}>
-      <Stack.Screen name={rootScreens.product} component={Product} />
+    <Stack.Navigator initialRouteName={rootScreens.productDetail}>
       <Stack.Screen
         name={rootScreens.productDetail}
         component={ProductDetail}
       />
+      <Stack.Screen name={rootScreens.product} component={Product} />
     </Stack.Navigator>
   );
 };

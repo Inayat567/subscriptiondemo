@@ -6,12 +6,9 @@ export const subscriptionServerValidation = async (
   token: string,
 ) => {
   try {
-    const params = {
-      packageName,
-      productID,
-      token,
-    };
-    const response = await axios.get('', {params});
+    const url = `http://localhost:8000/validate_subscription/${packageName}/${productID}/${token}`;
+
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.log('Error in subscriptionServerValidation', error);

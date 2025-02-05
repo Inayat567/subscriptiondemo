@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>mobu.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>1</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>02BE813288B6140F146009B38390136A4FB13420</string>
+				<key>dateExpires</key>
+				<string>22/11/2025</string>
+				<key>type</key>
+				<string>Apple Development</string>
+			</dict>
+			<key>embeddedBinaries</key>
+			<array>
+				<dict>
+					<key>architectures</key>
+					<array>
+						<string>arm64</string>
+					</array>
+					<key>buildNumber</key>
+					<string>0.12.0</string>
+					<key>certificate</key>
+					<dict>
+						<key>SHA1</key>
+						<string>02BE813288B6140F146009B38390136A4FB13420</string>
+						<key>dateExpires</key>
+						<string>22/11/2025</string>
+						<key>type</key>
+						<string>Apple Development</string>
+					</dict>
+					<key>name</key>
+					<string>hermes.framework</string>
+					<key>team</key>
+					<dict>
+						<key>id</key>
+						<string>TKWKFXAB32</string>
+						<key>name</key>
+						<string>jevaughn harvey</string>
+					</dict>
+					<key>versionNumber</key>
+					<string>0.12.0</string>
+				</dict>
+			</array>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>TKWKFXAB32.com.appnoit.mobu</string>
+				<key>aps-environment</key>
+				<string>development</string>
+				<key>com.apple.developer.team-identifier</key>
+				<string>TKWKFXAB32</string>
+				<key>get-task-allow</key>
+				<true/>
+			</dict>
+			<key>name</key>
+			<string>mobu.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>92c63d6c-e7dd-4aea-a214-d072614064e8</string>
+				<key>dateExpires</key>
+				<string>22/11/2025</string>
+				<key>name</key>
+				<string>iOS Team Provisioning Profile: com.appnoit.mobu</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>TKWKFXAB32</string>
+				<key>name</key>
+				<string>jevaughn harvey</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

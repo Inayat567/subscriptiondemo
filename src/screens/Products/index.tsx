@@ -10,13 +10,15 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {
-  getSubscription,
+  fetchSubscriptions,
   handleRestore,
   iapRequestSubscription,
   redeemPromoCode,
 } from '../../services/iap';
 import {Subscription} from 'react-native-iap';
-import {colors, width} from '../../utils';
+import {colors, height, width} from '../../utils';
+import {ParamListBase, useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 type FormattedSubscription = {
   title: string;
@@ -37,6 +39,7 @@ type Subscriptions = Subscription & {
 };
 
 const Product = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
   const [selectedPlan, setSelectedPlan] =
     useState<FormattedSubscription | null>(null);
   const [isLoading, setIsloading] = useState(true);
@@ -48,13 +51,18 @@ const Product = () => {
 
   useEffect(() => {
     const getAllSubscription = async () => {
-      console.log('first');
-      const subscriptions = await getSubscription();
-      const formattedSubscriptions =
-        subscriptions && formatSubscriptionData(subscriptions);
-      console.log('first: ', formattedSubscriptions);
-      formattedSubscriptions && setSubscriptions(formattedSubscriptions);
-      setIsloading(false);
+      try {
+        const subscriptions = await fetchSubscriptions();
+        console.log('all subscriptions: ', subscriptions);
+        const formattedSubscriptions =
+          subscriptions && formatSubscriptionData(subscriptions);
+        console.log('first: ', formattedSubscriptions);
+        formattedSubscriptions && setSubscriptions(formattedSubscriptions);
+        setIsloading(false);
+      } catch (error) {
+        setIsloading(false);
+        console.log('Error getting subscriptiions : ', error);
+      }
     };
 
     getAllSubscription();
@@ -124,8 +132,11 @@ const Product = () => {
         selectedPlan.productId,
       );
       setIsFetching(false);
+      navigation.goBack();
       console.log('response : ', hasSubscription);
     } else {
+      const hasSubscription = await iapRequestSubscription('mode1-sub-12m');
+      console.log('has subscription : ', hasSubscription);
       Alert.alert('No Plan Selected', 'Please select a plan to subscribe.');
     }
   };
@@ -172,7 +183,9 @@ const Product = () => {
         </TouchableOpacity>
       </View>
       {isLoading ? (
-        <ActivityIndicator size={'large'} color={colors.primary} />
+        <View style={{flex: 1, height: height * 0.7, justifyContent: 'center'}}>
+          <ActivityIndicator size={'large'} color={'black'} />
+        </View>
       ) : (
         <FlatList
           data={subscriptions}
