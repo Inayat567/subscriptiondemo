@@ -13,7 +13,6 @@ import {
   closeIapConnection,
   initIapConnection,
   verifySubscriptionFromBackend,
-  verifyUserSubscriptionValidation,
 } from './src/services/iap';
 import {setup} from 'react-native-iap';
 import {OS} from './src/utils';
@@ -42,11 +41,9 @@ const App = (): React.JSX.Element => {
       .then(async res => {
         console.log('IAP initialzed: ', res);
 
-        await verifySubscriptionFromBackend();
-
-        //  you can use this method to check whether user is premium or not
-        const isPremium = await verifyUserSubscriptionValidation();
-        console.log('user premium status : ', isPremium);
+        if (Platform.OS === OS.android) {
+          await verifySubscriptionFromBackend();
+        }
       })
       .catch(error => {
         console.log('Error initializing IAP', error);

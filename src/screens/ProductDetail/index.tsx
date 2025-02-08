@@ -12,11 +12,12 @@ import {
   getNonRenowingSubscriptionDetails,
   getSubscriptionDetails,
   handleRestore,
-  ValidatedLocalData,
+  handleRestoreProduct,
   verifyOneTimePurchaseInLocal,
   verifySubscriptionsInLocal,
 } from '../../services/iap';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { ValidatedLocalData } from '../../types';
 
 const ProductDetail = () => {
   const [isPremiumUser, setIsPremiumUser] = useState(
@@ -26,7 +27,8 @@ const ProductDetail = () => {
   const [oneTimeProduct, setOneTimeProduct] =
     useState<ValidatedLocalData | null>(null);
   const [subs, setSubs] = useState<ValidatedLocalData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isResotringSubscription, setIsRestoringSubscription] = useState(false);
+  const [isRestoringProduct, setIsRestoringProduct] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
 
   useFocusEffect(
@@ -44,7 +46,7 @@ const ProductDetail = () => {
       );
       setIsPremiumUser(isPremium);
       setIsPurchased(verifyOneTimePurchaseInLocal());
-    }, [loading]),
+    }, [isResotringSubscription, isRestoringProduct]),
   );
 
   const handlePremium = () => {
@@ -54,13 +56,25 @@ const ProductDetail = () => {
   };
 
   const handleRestoreSubscription = () => {
-    setLoading(true);
+    setIsRestoringSubscription(true);
     handleRestore()
       .then(res => {
-        setLoading(false);
+        setIsRestoringSubscription(false);
       })
       .catch(error => {
-        setLoading(false);
+        setIsRestoringSubscription(false);
+        console.log('error : ', error);
+      });
+  };
+
+  const handleRestoreProducts = () => {
+    setIsRestoringProduct(true);
+    handleRestoreProduct()
+      .then(res => {
+        setIsRestoringProduct(false);
+      })
+      .catch(error => {
+        setIsRestoringProduct(false);
         console.log('error : ', error);
       });
   };
@@ -116,13 +130,20 @@ const ProductDetail = () => {
 
       <View style={PDStyles.bottomContainer}>
         <TouchableOpacity onPress={handleCancelSubscription}>
-          <Text style={PDStyles.boldText}>Cancel</Text>
+          <Text style={PDStyles.boldText}>Cancel Subs</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleRestoreSubscription}>
-          {loading ? (
+          {isResotringSubscription ? (
             <ActivityIndicator size={'small'} color={'black'} />
           ) : (
-            <Text style={PDStyles.boldText}>Restore</Text>
+            <Text style={PDStyles.boldText}>Restore Subs</Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleRestoreProducts}>
+          {isRestoringProduct ? (
+            <ActivityIndicator size={'small'} color={'black'} />
+          ) : (
+            <Text style={PDStyles.boldText}>Restore prod</Text>
           )}
         </TouchableOpacity>
       </View>

@@ -241,11 +241,10 @@ const hasAppstoreAccount = async () => {
 };
 
 const validateSubscription = async (purchase: Purchase) => {
-  console.log('purchase to validate  : ', purchase);
   const receipt = purchase.transactionReceipt;
 
   if (receipt) {
-    if (purchase?.purchaseToken) {
+    if (Platform.OS === OS.android && purchase?.purchaseToken) {
       acknowledgePurchaseAndroid({token: purchase.purchaseToken!})
         .then(res => {
           console.log('Aknowledged successfull : ', res);
@@ -387,98 +386,123 @@ const updatePaymentLocally = (purchase: Purchase, subDetail: SubsProp) => {
   }
 };
 
-// restoreSubs true means, we are restoring subscription and false mean restoring product
-const getAvailablePurchase = async (restoreSubs: boolean) => {
+const checkAvailablePurchasesIos = async () => {
+  try {
+    const transactions = await Promise.all(
+      subSkus.map(async (sku) => {
+        try {
+          return await IapIosSk2.currentEntitlement(sku);
+        } catch (error) {
+          console.log(`❌ Error fetching transaction for SKU: ${sku}`, error);
+          return null;
+        }
+      })
+    );
+
+    const purchases = transactions.filter(Boolean) as Purchase[]; // Remove null values
+    let activeSubscriptions = 0;
+
+    purchases.forEach((transaction) => {
+      if (new Date(transaction.expirationDate) >= new Date()) {
+        updatePaymentLocally(
+          { purchaseToken: '' },
+          {
+            purchaseDate: transaction.purchaseDate,
+            expiresDate: transaction.expirationDate,
+            productId: transaction.productID,
+            transactionId: transaction.id,
+            type: transaction.productType === 'autoRenewable' ? 'Subscription' : 'One Time Purchase',
+            originalPurchaseDate: transaction.originalPurchaseDate,
+            originalTransactionId: transaction.id,
+            cancelReason: null,
+          }
+        );
+        activeSubscriptions++;
+      }
+    });
+
+    return { purchases, activeSubscriptions };
+  } catch (error) {
+    console.log('❌ Error in checkAvailablePurchasesIos:', error);
+    return { purchases: [], activeSubscriptions: 0 };
+  }
+};
+
+const getAvailablePurchase = async () => {
   try {
     let purchases: Purchase[] = [];
-    let activeSubscriptions = 0; // Track active subscriptions
+    let activeSubscriptions = 0;
 
     if (isIosStorekit2()) {
-      // StoreKit 2: Loop through each SKU and get the latest transaction
-      for (const sku of subSkus) {
-        try {
-          const transaction = await IapIosSk2.currentEntitlement(sku);
-          console.log('sk2 transaction : ', transaction);
-
-          if (
-            transaction &&
-            new Date(transaction.expirationDate) >= new Date()
-          ) {
-            updatePaymentLocally(
-              {purchaseToken: ''},
-              {
-                purchaseDate: transaction.purchaseDate,
-                expiresDate: transaction.expirationDate,
-                productId: transaction.productID,
-                transactionId: transaction.id,
-                type:
-                  transaction.productType === 'autoRenewable'
-                    ? 'Subscription'
-                    : 'One Time Purchase',
-                originalPurchaseDate: transaction.originalPurchaseDate,
-                originalTransactionId: transaction.id,
-                cancelReason: null,
-              },
-            );
-            if (restoreSubs && transaction.productType === 'autoRenewable') {
-              activeSubscriptions++; // Count active subscriptions
-            } else if (
-              !restoreSubs &&
-              transaction.productType !== 'autoRenewable'
-            ) {
-              activeSubscriptions++; // Count active product
+      const result = await checkAvailablePurchasesIos(); // ✅ Await the function
+      purchases = result.purchases?.filter(purchase=>purchase?.productType === "autoRenewable");
+      activeSubscriptions = result.activeSubscriptions;
+    } else {
+     purchases = await getAvailablePurchases();
+      if (purchases.length > 0) {
+        const validationResults = await Promise.all(
+          purchases.map(async (purchase) => {
+            if (purchase.purchaseToken || purchase.transactionReceipt) {
+              return await validateSubscription(purchase);
             }
-          }
+            return false;
+          })
+        );
 
-          if (transaction) {
-            purchases.push(transaction);
-          }
-        } catch (error) {
-          console.log(
-            'Error in getting available purchases (StoreKit 2):',
-            error,
-          );
-        }
-      }
-    } else {
-      // StoreKit 1: Restore all purchases
-      purchases = await getAvailablePurchases();
-
-      if (!purchases?.length) {
-        return 0; // No subscriptions
-      }
-
-      for (const purchase of purchases) {
-        if (purchase.purchaseToken || purchase.transactionReceipt) {
-          const isValid = await validateSubscription(purchase);
-          if (isValid && restoreSubs && purchase?.autoRenewingAndroid) {
-            activeSubscriptions++;
-          } else if (
-            isValid &&
-            !restoreSubs &&
-            !purchase?.autoRenewingAndroid
-          ) {
-            activeSubscriptions++;
-          }
-        }
+        activeSubscriptions = validationResults.filter(Boolean).length;
       }
     }
 
-    console.log('✅ Restored purchases:', purchases);
+    console.log('✅ Restored purchases:', purchases, activeSubscriptions);
 
-    // Determine the correct return value
-    if (activeSubscriptions > 0) {
-      return activeSubscriptions; // 1 or more active subscriptions
-    } else if (purchases.length > 0) {
-      return -1; // Expired or canceled subscriptions
-    } else {
-      return 0; // No subscriptions found
-    }
+    return activeSubscriptions > 0 ? activeSubscriptions : purchases.length > 0 ? -1 : 0;
   } catch (error) {
     console.log('❌ Error in getting available purchases:', error);
     return 0;
   }
 };
+
+const getAvailableProducts = async () => {
+  try {
+    let purchases: Purchase[] = [];
+    let activeSubscriptions = 0;
+
+    if (isIosStorekit2()) {
+      const result = await checkAvailablePurchasesIos(); // ✅ Await the function
+      purchases = result.purchases?.filter(purchase=>purchase?.productType === "autoRenewable");
+      activeSubscriptions = result.activeSubscriptions;
+    } else {
+      const purchaseHistory = await getHistory();
+      const filteredHistory = purchaseHistory
+        ?.filter((purchase) => androidProductSku.includes(purchase.productId))
+        .sort((a, b) => b.transactionDate - a.transactionDate) // Newest first
+        .slice(0, 5); // Take only the latest 5
+
+      purchases = [...filteredHistory];
+
+      if (purchases.length > 0) {
+        const validationResults = await Promise.all(
+          purchases.map(async (purchase) => {
+            if (purchase.purchaseToken || purchase.transactionReceipt) {
+              return await validateSubscription(purchase);
+            }
+            return false;
+          })
+        );
+
+        activeSubscriptions = validationResults.filter(Boolean).length;
+      }
+    }
+
+    console.log('✅ Restored products:', purchases);
+
+    return activeSubscriptions > 0 ? activeSubscriptions : purchases.length > 0 ? -1 : 0;
+  } catch (error) {
+    console.log('❌ Error in getting available products:', error);
+    return 0;
+  }
+};
+
 
 const getSubscription = async () => {
   try {
@@ -610,22 +634,16 @@ const verifyUserSubscriptionValidation = async () => {
 
 const handleRestore = async () => {
   if (verifySubscriptionsInLocal()) {
-    Alert.alert(
-      'Subscription Active',
-      'You already have an active subscription.',
-    );
+    Alert.alert('Subscription Active', 'You already have an active subscription.');
     return;
   }
 
-  let availablePurchases = await getAvailablePurchase(true);
+  let availablePurchases = await getAvailablePurchase();
 
   if (availablePurchases === 0) {
     Alert.alert('No Subscription', 'You have no active subscription.');
   } else if (availablePurchases > 0) {
-    Alert.alert(
-      'Subscription Restored',
-      'Congrats! 🎉 Your subscription has been restored.',
-    );
+    Alert.alert('Subscription Restored', 'Congrats! 🎉 Your subscription has been restored.');
   } else {
     Alert.alert('Subscription Expired', 'Your subscription has expired!');
   }
@@ -637,19 +655,17 @@ const handleRestoreProduct = async () => {
     return;
   }
 
-  let availablePurchases = await getAvailablePurchase(false);
+  let availablePurchases = await getAvailableProducts();
 
   if (availablePurchases === 0) {
     Alert.alert('No Purchase Found', 'You have no purchased products.');
   } else if (availablePurchases > 0) {
-    Alert.alert(
-      'Product Restored',
-      'Congrats! 🎉 Your product has been restored.',
-    );
+    Alert.alert('Product Restored', 'Congrats! 🎉 Your product has been restored.');
   } else {
     Alert.alert('Purchase Expired', 'Your previous purchase has expired!');
   }
 };
+
 
 export {
   initIapConnection,
@@ -669,5 +685,6 @@ export {
   verifyUserSubscriptionValidation,
   getAllProducts,
   iapRequestPurchase,
-  handleRestoreProduct,
+  getAvailableProducts,
+  handleRestoreProduct
 };

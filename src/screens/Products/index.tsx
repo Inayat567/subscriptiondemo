@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {
   fetchSubscriptions,
   getAllProducts,
+  getHistory,
   handleRestore,
   iapRequestPurchase,
   iapRequestSubscription,
@@ -20,7 +22,9 @@ import {
   colors,
   formatAndroidProducts,
   formatAndroidSubscriptions,
+  formatIOSSubscriptions,
   height,
+  OS,
   width,
 } from '../../utils';
 import {ParamListBase, useNavigation} from '@react-navigation/native';
@@ -43,16 +47,22 @@ const Product = () => {
       try {
         const products = await getAllProducts();
         console.log('all products: ', products);
-        const formattedProducts = formatAndroidProducts(products);
         const subscriptions = await fetchSubscriptions();
-        const formattedSubscriptions =
-          formatAndroidSubscriptions(subscriptions);
-        console.log('formattted : ', formattedProducts, formattedSubscriptions);
-        setSubscriptions(
-          formattedProducts
-            ? [formattedSubscriptions, formattedProducts]
-            : [formattedSubscriptions],
-        );
+        if (Platform.OS === OS.android) {
+          const formattedProducts = formatAndroidProducts(products);
+          const formattedSubscriptions =
+            formatAndroidSubscriptions(subscriptions);
+          console.log(
+            'formattted : ',
+            formattedProducts,
+            formattedSubscriptions,
+          );
+          setSubscriptions([formattedSubscriptions, formattedProducts]);
+        } else {
+          const formattedSubscriptions = formatIOSSubscriptions(subscriptions);
+          console.log('formattedSubscriptions : ', formattedSubscriptions);
+          setSubscriptions([formattedSubscriptions]);
+        }
         setIsloading(false);
       } catch (error) {
         setIsloading(false);

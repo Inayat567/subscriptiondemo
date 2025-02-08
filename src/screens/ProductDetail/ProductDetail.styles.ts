@@ -14,7 +14,7 @@ export const PDStyles = StyleSheet.create({
   text: {textAlign: 'center', marginVertical: 30},
   button: {
     position: 'absolute',
-    bottom: '5%',
+    bottom: '8%',
     left: '28%',
     backgroundColor: '#4CAF00',
     padding: 10,
@@ -30,5 +30,5 @@ export const PDStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
   },
-  boldText: {fontSize: 14, fontWeight: 'bold'},
+  boldText: {fontSize: 14, fontWeight: 'bold',},
 });

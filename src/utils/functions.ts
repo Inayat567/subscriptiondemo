@@ -17,6 +17,22 @@ export const formatAndroidProducts = (products: Product[] | null) => {
   };
 };
 
+export const formatIOSSubscriptions = subscriptions => {
+  return {
+    title: 'Subscriptions',
+    data: subscriptions.map(sub => ({
+      title: sub.title,
+      price: sub.localizedPrice, // Same as Android's localizedPrice
+      description: sub.description,
+      productId: sub.productId,
+      productType: sub.type, // "subs" or "inapp"
+      subscriptionPeriod: `${sub.subscriptionPeriodNumberIOS} ${sub.subscriptionPeriodUnitIOS}`, // E.g., "1 MONTH" or "1 YEAR"
+      introductoryPrice: sub.introductoryPriceAsAmountIOS || 'N/A', // Handle undefined case
+      currency: sub.currency || 'USD', // Default to USD if empty
+    })),
+  };
+};
+
 export const formatAndroidSubscriptions = (
   subscriptions: SubscriptionAndroid[],
 ) => {
