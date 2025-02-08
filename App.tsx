@@ -5,18 +5,18 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {View, StyleSheet, Platform, StatusBar} from 'react-native';
 import Root from './src/navigation/Root';
 import {NavigationContainer} from '@react-navigation/native';
 import {
   closeIapConnection,
   initIapConnection,
-  keyName,
+  verifySubscriptionFromBackend,
   verifyUserSubscriptionValidation,
 } from './src/services/iap';
 import {setup} from 'react-native-iap';
-import {OS, storage} from './src/utils';
+import {OS} from './src/utils';
 
 const App = (): React.JSX.Element => {
   useEffect(() => {
@@ -34,10 +34,6 @@ const App = (): React.JSX.Element => {
   }, []);
 
   const init = () => {
-    const localData = storage.getString(keyName);
-    const parsedData = localData ? JSON.parse(localData) : null;
-    console.log('local data : ', parsedData);
-
     if (Platform.OS === OS.ios) {
       setup({storekitMode: 'STOREKIT2_MODE'});
     }
@@ -45,7 +41,9 @@ const App = (): React.JSX.Element => {
     initIapConnection()
       .then(async res => {
         console.log('IAP initialzed: ', res);
-        
+
+        await verifySubscriptionFromBackend();
+
         //  you can use this method to check whether user is premium or not
         const isPremium = await verifyUserSubscriptionValidation();
         console.log('user premium status : ', isPremium);
@@ -57,7 +55,7 @@ const App = (): React.JSX.Element => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle={'dark-content'}/>
+      <StatusBar barStyle={'dark-content'} />
       <NavigationContainer>
         <Root />
       </NavigationContainer>

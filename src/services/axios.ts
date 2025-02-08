@@ -1,4 +1,4 @@
-import axios from 'axios';
+import {BASE_URL} from './config';
 
 export const subscriptionServerValidation = async (
   packageName: string,
@@ -6,10 +6,26 @@ export const subscriptionServerValidation = async (
   token: string,
 ) => {
   try {
-    const url = `http://localhost:8000/validate_subscription/${packageName}/${productID}/${token}`;
+    const response = await BASE_URL.get(
+      `validate_subscription/${packageName}/${productID}/${token}`,
+    );
+    return response;
+  } catch (error) {
+    console.log('Error in subscriptionServerValidation', error);
+    return null;
+  }
+};
 
-    const response = await axios.get(url);
-    return response.data;
+export const purchaseServerValidation = async (
+  packageName: string,
+  productID: string,
+  token: string,
+) => {
+  try {
+    const response = await BASE_URL.get(
+      `validate_purchase/${packageName}/${productID}/${token}`,
+    );
+    return response;
   } catch (error) {
     console.log('Error in subscriptionServerValidation', error);
     return null;

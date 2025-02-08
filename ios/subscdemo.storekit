@@ -1,0 +1,260 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "A0602D4C",
+  "nonRenewingSubscriptions" : [
+    {
+      "displayPrice" : "49.99",
+      "familyShareable" : false,
+      "internalID" : "6741431750",
+      "localizations" : [
+        {
+          "description" : "mode 2 bi-yearly for demo",
+          "displayName" : "mode 1 bi-yearly",
+          "locale" : "en_GB"
+        }
+      ],
+      "productID" : "mode_1_2y",
+      "referenceName" : "mode 1 bi-yearly demo",
+      "type" : "NonRenewingSubscription"
+    },
+    {
+      "displayPrice" : "69.99",
+      "familyShareable" : false,
+      "internalID" : "6741431851",
+      "localizations" : [
+        {
+          "description" : "mode 1 tri-yearly for demo",
+          "displayName" : "mode 1 tri-yearly",
+          "locale" : "en_GB"
+        }
+      ],
+      "productID" : "mode_1_3y",
+      "referenceName" : "mode 1 tri-yearly demo",
+      "type" : "NonRenewingSubscription"
+    },
+    {
+      "displayPrice" : "44.99",
+      "familyShareable" : false,
+      "internalID" : "6741431874",
+      "localizations" : [
+        {
+          "description" : "mode 2 b-yearly for demo",
+          "displayName" : "mode 2 bi-yearly",
+          "locale" : "en_GB"
+        }
+      ],
+      "productID" : "mode_2_2y",
+      "referenceName" : "mode 2 bi-yearly demo",
+      "type" : "NonRenewingSubscription"
+    },
+    {
+      "displayPrice" : "59.99",
+      "familyShareable" : false,
+      "internalID" : "6741431744",
+      "localizations" : [
+        {
+          "description" : "mode 2 tri-yearly for demo",
+          "displayName" : "mode 2 tri-yearly",
+          "locale" : "en_GB"
+        }
+      ],
+      "productID" : "mode_2_3y",
+      "referenceName" : "mode 2 tri-yearly demo",
+      "type" : "NonRenewingSubscription"
+    }
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6741431002",
+    "_developerTeamID" : "2G9HMSA3F4",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 760555958.91461003,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21630136",
+      "localizations" : [
+
+      ],
+      "name" : "demo",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6741431326",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "mode 1 monthly for demo",
+              "displayName" : "mode 1 monthly",
+              "locale" : "en_GB"
+            }
+          ],
+          "productID" : "mode_1_m1",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "mode 1 monthly",
+          "subscriptionGroupID" : "21630136",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6741431350",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "mode 1 yearly for demo",
+              "displayName" : "mode 1 yearly",
+              "locale" : "en_GB"
+            }
+          ],
+          "productID" : "mode_1_y1",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "mode 1 yearly",
+          "subscriptionGroupID" : "21630136",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "2.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "6741431437",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "mode 2 monthly for demo",
+              "displayName" : "mode 2 monthly",
+              "locale" : "en_GB"
+            }
+          ],
+          "productID" : "mode_2_m1",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "mode 2 monthly",
+          "subscriptionGroupID" : "21630136",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "24.99",
+          "familyShareable" : false,
+          "groupNumber" : 4,
+          "internalID" : "6741431631",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "mode 2 yearly for demo",
+              "displayName" : "mode 2 yearly",
+              "locale" : "en_GB"
+            }
+          ],
+          "productID" : "mode_2_y1",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "mode 2 yearly",
+          "subscriptionGroupID" : "21630136",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

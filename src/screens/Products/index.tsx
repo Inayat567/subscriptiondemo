@@ -4,39 +4,28 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
 } from 'react-native';
 import {
   fetchSubscriptions,
+  getAllProducts,
   handleRestore,
+  iapRequestPurchase,
   iapRequestSubscription,
   redeemPromoCode,
 } from '../../services/iap';
-import {Subscription} from 'react-native-iap';
-import {colors, height, width} from '../../utils';
+import {
+  colors,
+  formatAndroidProducts,
+  formatAndroidSubscriptions,
+  height,
+  width,
+} from '../../utils';
 import {ParamListBase, useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-
-type FormattedSubscription = {
-  title: string;
-  price: any;
-  description: string;
-  productId: string;
-};
-
-type FormattedSubscriptions = {
-  title: string;
-  data: FormattedSubscription[];
-};
-
-type Subscriptions = Subscription & {
-  type: string;
-  productId: string;
-  localizedPrice: string;
-};
+import {FormattedSubscription, FormattedSubscriptions} from '../../types';
 
 const Product = () => {
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
@@ -52,12 +41,18 @@ const Product = () => {
   useEffect(() => {
     const getAllSubscription = async () => {
       try {
+        const products = await getAllProducts();
+        console.log('all products: ', products);
+        const formattedProducts = formatAndroidProducts(products);
         const subscriptions = await fetchSubscriptions();
-        console.log('all subscriptions: ', subscriptions);
         const formattedSubscriptions =
-          subscriptions && formatSubscriptionData(subscriptions);
-        console.log('first: ', formattedSubscriptions);
-        formattedSubscriptions && setSubscriptions(formattedSubscriptions);
+          formatAndroidSubscriptions(subscriptions);
+        console.log('formattted : ', formattedProducts, formattedSubscriptions);
+        setSubscriptions(
+          formattedProducts
+            ? [formattedSubscriptions, formattedProducts]
+            : [formattedSubscriptions],
+        );
         setIsloading(false);
       } catch (error) {
         setIsloading(false);
@@ -68,74 +63,36 @@ const Product = () => {
     getAllSubscription();
   }, []);
 
-  const formatSubscriptionData = (subscriptions: Subscriptions[]) => {
-    subscriptions?.map(sub => {
-      console.log('SUB : ', sub);
-    });
-    const mode1Renewable = subscriptions.filter(
-      sub => sub.productId.includes('mode_1') && sub.type === 'subs',
-    );
-    const mode2Renewable = subscriptions.filter(
-      sub => sub.productId.includes('mode_2') && sub.type === 'subs',
-    );
-    const mode1NonRenewable = subscriptions.filter(
-      sub => sub.productId.includes('mode_1') && sub.type !== 'subs',
-    );
-    const mode2NonRenewable = subscriptions.filter(
-      sub => sub.productId.includes('mode_2') && sub.type !== 'subs',
-    );
-
-    return [
-      {
-        title: 'Mode 1 Renewable Subscriptions',
-        data: mode1Renewable.map(sub => ({
-          title: sub.title,
-          price: sub.localizedPrice,
-          description: sub.description,
-          productId: sub.productId,
-        })),
-      },
-      {
-        title: 'Mode 2 Renewable Subscriptions',
-        data: mode2Renewable.map(sub => ({
-          title: sub.title,
-          price: sub.localizedPrice,
-          description: sub.description,
-          productId: sub.productId,
-        })),
-      },
-      {
-        title: 'Mode 1 Non-Renewable Subscriptions',
-        data: mode1NonRenewable.map(sub => ({
-          title: sub.title,
-          price: sub.localizedPrice,
-          description: sub.description,
-          productId: sub.productId,
-        })),
-      },
-      {
-        title: 'Mode 2 Non-Renewable Subscriptions',
-        data: mode2NonRenewable.map(sub => ({
-          title: sub.title,
-          price: sub.localizedPrice,
-          description: sub.description,
-          productId: sub.productId,
-        })),
-      },
-    ];
-  };
-
   const handleSubscribe = async () => {
     if (selectedPlan) {
       setIsFetching(true);
-      const hasSubscription = await iapRequestSubscription(
-        selectedPlan.productId,
-      );
+      console.log('selectedPlan.productId :', selectedPlan);
+      if (selectedPlan?.productType === 'subs') {
+        const hasSubscription = await iapRequestSubscription(
+          selectedPlan.productId,
+        );
+        if (hasSubscription) {
+          Alert.alert(
+            'Congratulation 🥳',
+            'Your subscription is purchased successfully',
+          );
+        }
+        console.log('response : ', hasSubscription);
+      } else {
+        const hasSubscription = await iapRequestPurchase(
+          selectedPlan.productId,
+        );
+        console.log('response : ', hasSubscription);
+        if (hasSubscription) {
+          Alert.alert(
+            'Congratulation 🥳',
+            'Your purchase is completed successfully',
+          );
+        }
+      }
       setIsFetching(false);
-      navigation.goBack();
-      console.log('response : ', hasSubscription);
     } else {
-      const hasSubscription = await iapRequestSubscription('mode1-sub-12m');
+      const hasSubscription = await iapRequestSubscription('mode2_sub');
       console.log('has subscription : ', hasSubscription);
       Alert.alert('No Plan Selected', 'Please select a plan to subscribe.');
     }
@@ -194,7 +151,7 @@ const Product = () => {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          snapToInterval={width * 0.85 + 20} // Adjusted for margin
+          snapToInterval={width * 0.85 + 20}
           snapToAlignment="start"
           decelerationRate="fast"
           contentContainerStyle={styles.flatListContent}

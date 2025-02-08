@@ -1,389 +1,5 @@
-// import {Alert, EmitterSubscription, Linking, Platform} from 'react-native';
-// import {
-//   purchaseUpdatedListener,
-//   purchaseErrorListener,
-//   clearTransactionIOS,
-//   endConnection,
-//   finishTransaction,
-//   flushFailedPurchasesCachedAsPendingAndroid,
-//   getAvailablePurchases,
-//   getSubscriptions,
-//   initConnection,
-//   requestSubscription,
-//   getPurchaseHistory,
-//   validateReceiptIos,
-//   Purchase,
-//   acknowledgePurchaseAndroid,
-//   presentCodeRedemptionSheetIOS,
-// } from 'react-native-iap';
-// import {OS, storage, urls} from '../utils';
-// import {subscriptionServerValidation} from './axios';
-
-// export const keyName = 'subscription';
-
-// const androidSub = [
-//   'mode1-sub-12m',
-//   'mode1-sub-1m',
-//   'mode2-sub-12m',
-//   'mode2-sub-1m',
-// ];
-// const androidInApp = [
-//   'mode1_2yr_onetime',
-//   'mode1_3yr_onetime',
-//   'mode2_2yr_onetime',
-//   'mode2_3yr_onetime',
-// ];
-// const iosSub = ['mode_1_m1', 'mode_1_y1', 'mode_2_m1', 'mode_2_y1'];
-// const iosInApp = ['mode_1_2y', 'mode_1_3y', 'mode_2_2y', 'mode_2_3y'];
-
-// const subscriptionIDs = Platform.OS === OS.android ? androidSub : iosSub;
-// const inAppIDs = Platform.OS === OS.android ? androidInApp : iosInApp;
-
-// type subscriptionDetailProp = {
-//   amount: string;
-//   micros: number;
-//   saved?: number;
-//   currencyCode?: string;
-// }[];
-
-// // global variable
-// let purchaseUpdate: EmitterSubscription | null = null;
-// let purchaseError: EmitterSubscription | null = null;
-
-// const updateListener = () => {
-//   console.log('update listener called');
-//   purchaseUpdate = purchaseUpdatedListener(async purchase => {
-//     console.log('Listen to purchase update listener : ', purchase);
-//     const receipt = purchase.transactionReceipt;
-//     if (receipt) {
-//       handleSubscriptionPurchase(purchase);
-//     }
-//   });
-//   purchaseError = purchaseErrorListener(error => {
-//     console.log('Listened Received purchase error : ', error);
-//   });
-//   return true;
-// };
-
-// const initIapConnection = async () => {
-//   return await initConnection().then(() => {
-//     return Platform.OS === OS.ios
-//       ? clearTransactionIOS()
-//           .then(res => {
-//             console.log('Cleared pending payments from billing skd: ', res);
-//             return updateListener();
-//           })
-//           .catch(e => {
-//             console.log('Error while clearing pending payments: ', e);
-//             return false;
-//           })
-//       : flushFailedPurchasesCachedAsPendingAndroid()
-//           .then(() => {
-//             console.log('Cleared pending payments from billing skd');
-//             return updateListener();
-//           })
-//           .catch(e => {
-//             console.log('Error while clearing pending payments: ', e);
-//             return false;
-//           });
-//   });
-// };
-
-// const closeIapConnection = async () => {
-//   return await endConnection()
-//     .then(res => {
-//       console.log('Connection terminted...', res);
-//       return true;
-//     })
-//     .catch(e => {
-//       console.log('Connection  could not be terminated: ', e);
-//       return false;
-//     });
-// };
-
-// const removeSubscriptionListener = () => {
-//   purchaseUpdate?.remove();
-//   purchaseUpdate = null;
-//   purchaseError?.remove();
-//   purchaseError = null;
-//   console.log('removed all listener');
-// };
-
-// const handleSubscriptionPurchase = async (purchase: Purchase) => {
-//   if (Platform.OS === OS.android && purchase?.purchaseToken) {
-//     //call Backend API
-
-//     const serverResponse = await subscriptionServerValidation(
-//       purchase.packageNameAndroid || '',
-//       purchase.productId,
-//       purchase.purchaseToken || '',
-//     );
-//     if (serverResponse.success) {
-//       // await updateUserToPremium(userId!, true);  // If you wannt update your backend
-//       acknowledgePurchaseAndroid({token: purchase.purchaseToken!})
-//         .then(res => {
-//           console.log('acknowledged purchase android', res);
-//         })
-//         .catch(error => {
-//           console.log('error acknowledging purchase android', error);
-//         });
-
-// const localData = storage.getString(keyName);
-// const parsedData = localData ? JSON.parse(localData) : undefined;
-//       const currentDate = new Date();
-//       const validatedLocalData = {
-//         planId: 'monthly', // weakly, monthly, yearly
-//         // userId: userId,
-//         startDate: new Date(
-//           Number(serverResponse.data?.startTimeMillis),
-//         ).toString(),
-//         endDate: new Date(
-//           Number(serverResponse.data?.expiryTimeMillis),
-//         ).toString(),
-//         token: purchase.purchaseToken,
-//         status: true,
-//         price: serverResponse.data?.priceAmountMicros / 1000000,
-//         currency: serverResponse.data?.priceCurrencyCode,
-//         productId: purchase.productId,
-//         modified: currentDate.toString(),
-//         packageName: purchase.packageNameAndroid || '',
-//       };
-//       storage.set(keyName, JSON.stringify(validatedLocalData));
-//     } else {
-//       // await updateUserToPremium(userId!, false);   // If you wannt update your backend
-//     }
-
-//     console.log('server Validation rsponse : ', serverResponse);
-
-//     finishTransaction({purchase, isConsumable: false})
-//       .then(() => console.log('clear unConsumable transaction'))
-//       .catch(e =>
-//         console.log('Error while clearing unConsumable transaction: ', e),
-//       );
-//     console.log('Clear transaction');
-//   } else {
-//     const receiptBody = {
-//       'receipt-data': purchase.transactionReceipt,
-//       password: '9182b02a2a674dfe821cfbf71da56d3f', // app shared secret, can be found in App Store Connect
-//     };
-//     let res = await validateReceiptIos({receiptBody, isTest: true}); // change isTest to false in production mode
-//     console.log(
-//       'Validate Receipt Response from listener : ',
-//       res?.latest_receipt_info,
-//     );
-//   }
-//   closeIapConnection().then(() => initConnection());
-// };
-
-// const getAvailablePurchase = () => {
-//   return getAvailablePurchases()
-//     .then(products => {
-//       return products;
-//     })
-//     .catch(e => {
-//       console.log('Error in getting available purchases: ', e);
-//       return [];
-//     });
-// };
-
-// const getSubscription = () => {
-//   return getSubscriptions({skus: [...subscriptionIDs, ...inAppIDs]})
-//     .then(subs => {
-//       console.log('get subscriptions Response : ', subs);
-//       return subs;
-//     })
-//     .catch(e => {
-//       console.log('Error in getting subscriptions: ', e);
-//       return null;
-//     });
-// };
-
-// const iapRequestSubscription = (sku: string) => {
-//   try {
-//     return getSubscriptions({skus: [sku]})
-//       .then((subscription: any) => {
-//         console.log('subscriptions : ', subscription);
-//         if (subscription?.length === 0) {
-//           return false;
-//         }
-//         let offerToken =
-//           Platform.OS === OS.android &&
-//           subscription?.length > 0 &&
-//           subscription[0]['subscriptionOfferDetails'][0]['offerToken'];
-//         console.log('getSubscription response : ', subscription);
-//         let payload =
-//           Platform.OS === OS.android
-//             ? {
-//                 sku: sku,
-//                 ...(offerToken && {
-//                   subscriptionOffers: [{sku: sku, offerToken}],
-//                 }),
-//               }
-//             : {
-//                 sku: sku,
-//               };
-//         return requestSubscription(payload)
-//           .then(async res => {
-//             console.log('Request Subscription response : ', res);
-//             return true;
-//           })
-//           .catch(e => {
-//             console.log('Failed to request subscription : ', e);
-//             return false;
-//           });
-//       })
-//       .catch(e => {
-//         console.log('Error in subscriptions: ', e);
-//         return false;
-//       });
-//   } catch (e) {
-//     console.log('Error: ', e);
-//     return false;
-//   }
-// };
-
-// const getHistory = () => {
-//   return getPurchaseHistory()
-//     .then(res => {
-//       console.log('Purchase history response : ', res);
-//       return res;
-//     })
-//     .catch(e => {
-//       console.log('Error in getting purchase history', e);
-//       return [];
-//     });
-// };
-
-// const fetchSubscriptions = async () => {
-//   const subscriptionsDetail: subscriptionDetailProp = [];
-//   return getSubscription()
-//     .then(res => {
-//       res?.map((sub: any) => {
-//         if (Platform.OS === OS.android) {
-//           let subscribe =
-//             sub.subscriptionOfferDetails[0].pricingPhases.pricingPhaseList[0];
-//           subscriptionsDetail.push({
-//             amount: subscribe?.formattedPrice,
-//             micros: subscribe?.priceAmountMicros,
-//             currencyCode: subscribe?.priceCurrencyCode,
-//           });
-//         } else {
-//           subscriptionsDetail.push({
-//             amount: sub.price,
-//             micros: sub.price * 10000,
-//             currencyCode: sub.currency,
-//           });
-//         }
-//       });
-//       console.log(subscriptionsDetail);
-//       if (subscriptionsDetail.length > 0) {
-//         let save = 0;
-//         save =
-//           (subscriptionsDetail[0]!.micros * 12 -
-//             subscriptionsDetail[0]!.micros) /
-//           1000000;
-//         subscriptionsDetail[0]!.saved = save;
-//       }
-//       return subscriptionsDetail;
-//     })
-//     .catch(e => {
-//       console.log('Error in getting user subscription details', e);
-//       return [];
-//     });
-// };
-
-// const cancelSubscription = (id?: number) => {
-//   let productID = id === 0 ? subscriptionIDs[0] : subscriptionIDs[1];
-//   if (Platform.OS === OS.ios) {
-//     Linking.openURL(urls.iosUnscriptionUrl);
-//   } else {
-//     Linking.openURL(urls.androidUnscriptionUrl + productID);
-//   }
-// };
-
-// const redeemPromoCode = async (promoCode?: string) => {
-//   Platform.OS === OS.android
-//     ? Linking.openURL(urls.androidRedeemUrl + promoCode)
-//     : await presentCodeRedemptionSheetIOS();
-// };
-
-// const handleRestore = async () => {
-//   const hasAlreadySubscription = verifySubscriptionsInLocal();
-//   console.log('hasAlreadySubscription : ', hasAlreadySubscription);
-//   let availablePurchases = [];
-//   if (hasAlreadySubscription) {
-//     return;
-//   } else {
-//     const subscription = await getAvailablePurchase();
-//     availablePurchases = subscription.filter(
-//       subscription => subscription.productId === subscriptionIDs[0],
-//     );
-//   }
-//   if (availablePurchases.length === 0) {
-//     // NO SUBSCRIPTION
-//     Alert.alert(
-//       'No subscription',
-//       "You don't have any subscription before or expired",
-//     );
-//     return null;
-//   } else {
-//     handleSubscriptionPurchase(availablePurchases[0]!);
-//     console.log('available purchase : ', availablePurchases);
-//     return;
-//   }
-// };
-
-// const verifySubscriptionsInLocal = () => {
-//   try {
-//     const localData = storage.getString(keyName);
-//     const parsedData = localData ? JSON.parse(localData) : null;
-//     console.log('local data : ', parsedData);
-//     if (parsedData) {
-//       const subscriptionValidTimeStr: string = parsedData!.endDate as string;
-
-//       const subscriptionValidTime = new Date(subscriptionValidTimeStr);
-//       const currentTime = new Date();
-
-//       if (subscriptionValidTime >= currentTime) {
-//         return true;
-//       } else {
-//         return false;
-//       }
-//     } else {
-//       return false;
-//     }
-//   } catch (error) {
-//     console.log('Error in verifying subscription : ', error);
-//     return false;
-//   }
-// };
-
-// export {
-//   initIapConnection,
-//   closeIapConnection,
-//   getHistory,
-//   getSubscription,
-//   iapRequestSubscription,
-//   updateListener,
-//   removeSubscriptionListener,
-//   fetchSubscriptions,
-//   cancelSubscription,
-//   redeemPromoCode,
-//   handleRestore,
-//   verifySubscriptionsInLocal,
-// };
-
-export const keyName = 'subscription';
-
-type SubsProp = {
-  purchaseDate: number;
-  expiresDate: number;
-  originalPurchaseDate: number;
-  productId: string;
-  transactionId: number;
-  originalTransactionId: number;
-  type: string;
-};
+export const subscriptionKey = 'subscription';
+export const productKey = 'products';
 
 import {Alert, EmitterSubscription, Linking, Platform} from 'react-native';
 import {
@@ -405,47 +21,52 @@ import {
   getReceiptIOS,
   IapIosSk2,
   isIosStorekit2,
+  getProducts,
+  requestPurchase,
 } from 'react-native-iap';
 import {OS} from '../utils/keywords';
-import {subscriptionServerValidation} from './axios';
+import {purchaseServerValidation, subscriptionServerValidation} from './axios';
 import {storage, urls} from '../utils';
 import {jwtDecode} from 'jwt-decode';
+import {subscriptionDetailProp, SubsProp, ValidatedLocalData} from '../types';
 
-const android = [
-  'mode1-sub-12m',
-  'mode1-sub-1m',
-  'mode2-sub-12m',
-  'mode2-sub-1m',
-
+const androidProductSku = [
   'mode1_2yr_onetime',
   'mode1_3yr_onetime',
   'mode2_2yr_onetime',
   'mode2_3yr_onetime',
 ];
 
-const ios = [
+const androidSubscriptionSku = ['mode1_sub', 'mode2_sub'];
+
+const iosProductSku = [
   'mode_1_m1',
   'mode_1_y1',
   'mode_2_m1',
   'mode_2_y1',
 
-  'mode_1_2y',
-  'mode_1_3y',
-  'mode_2_2y',
-  'mode_2_3y',
+  // 'mode_1_2y',
+  // 'mode_1_3y',
+  // 'mode_2_2y',
+  // 'mode_2_3y',
 ];
 
-const skus: string[] = Platform.select({
-  android: android,
-  ios: ios,
+const iosSubscriptionSku = [
+  'mode_1_bi_yearly',
+  'mode_1_3y_',
+  'mode_2_2yearly',
+  'mode_2_3yearly',
+];
+
+const subSkus: string[] = Platform.select({
+  android: androidSubscriptionSku,
+  ios: iosSubscriptionSku,
 })!;
 
-type subscriptionDetailProp = {
-  amount: string;
-  micros: number;
-  saved?: number;
-  currencyCode?: string;
-}[];
+const prodSkus: string[] = Platform.select({
+  android: androidProductSku,
+  ios: iosProductSku,
+})!;
 
 // global variable
 let purchaseUpdate: EmitterSubscription | null = null;
@@ -454,14 +75,118 @@ let purchaseError: EmitterSubscription | null = null;
 export const verifySubscriptionsInLocal = (): boolean => {
   const currentDate = new Date();
   const localData = getSubscriptionDetails();
-  console.log('localData : ', localData);
   return new Date(localData?.to) >= currentDate;
 };
 
-const getSubscriptionDetails = () => {
-  const localData = storage.getString(keyName);
+export const verifySubscriptionFromBackend = async () => {
+  if (verifySubscriptionsInLocal()) {
+    const subscription = getSubscriptionDetails();
+
+    const isValidatedFromServer = await subscriptionServerValidation(
+      urls.appName,
+      subscription?.productId,
+      subscription?.token!,
+    );
+
+    if (!isValidatedFromServer?.data?.success) {
+      return false;
+    } else {
+      const data = isValidatedFromServer?.data?.data;
+      const validatedData = {
+        purchaseDate: data?.startTimeMillis || data?.purchaseTimeMillis,
+        expiresDate: data?.expiryTimeMillis,
+        originalPurchaseDate: data?.startTimeMillis || data?.purchaseTimeMillis,
+        productId: subscription?.productId,
+        transactionId: subscription?.transactionId,
+        originalTransactionId: subscription?.transactionId,
+        type: subscription?.subscriptionType,
+        cancelReason: data?.cancelReason ?? null,
+      };
+      return updatePaymentLocally(
+        {purchaseToken: subscription?.token},
+        validatedData,
+      );
+    }
+  } else {
+    return false;
+  }
+};
+
+export const verifyOneTimePurchaseInLocal = (): boolean => {
+  const currentDate = new Date();
+  const localData = getNonRenowingSubscriptionDetails();
+  console.log('localData : ', localData);
+
+  if (!localData?.productId || !localData?.from) {
+    return false;
+  }
+  const fromDate = new Date(localData.from);
+  const timeDifference = currentDate.getTime() - fromDate.getTime();
+  const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
+
+  if (
+    localData.productId === 'mode1_2yr_onetime' ||
+    localData.productId === 'mode2_2yr_onetime'
+  ) {
+    return timeDifference < 2 * oneYearInMs;
+  } else if (
+    localData.productId === 'mode1_3yr_onetime' ||
+    localData.productId === 'mode2_3yr_onetime'
+  ) {
+    return timeDifference < 3 * oneYearInMs;
+  }
+
+  return false;
+};
+
+export const getSubscriptionDetails = () => {
+  const localData = storage.getString(subscriptionKey);
   const parsedData = localData ? JSON.parse(localData) : undefined;
   return parsedData;
+};
+
+export const getNonRenowingSubscriptionDetails = ():
+  | ValidatedLocalData
+  | undefined => {
+  const localData = storage.getString(productKey);
+  const parsedData = localData ? JSON.parse(localData) : undefined;
+
+  if (!parsedData || !parsedData.from || !parsedData.productId) {
+    return undefined;
+  }
+  const fromDate = new Date(parsedData?.from);
+
+  let durationYears = 0;
+  if (
+    parsedData.productId === 'mode_1_2y' ||
+    parsedData.productId === 'mode_2_2y'
+  )
+    durationYears = 2;
+  else if (
+    parsedData.productId === 'mode_1_3y' ||
+    parsedData.productId === 'mode_2_3y'
+  )
+    durationYears = 3;
+
+  const expiryTimestamp =
+    fromDate.getTime() + durationYears * 365 * 24 * 60 * 60 * 1000;
+  const expiryDate = new Date(expiryTimestamp);
+
+  const formattedExpiryDate = expiryDate.toLocaleString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+
+  return {
+    ...parsedData,
+    to: formattedExpiryDate,
+  };
 };
 
 const updateListener = () => {
@@ -555,22 +280,44 @@ const validateSubscription = async (purchase: Purchase) => {
   }
 
   if (Platform.OS === OS.android) {
-    const isValidatedFromServer = await subscriptionServerValidation(
-      urls.appName,
-      purchase?.productId,
-      purchase?.purchaseToken!,
-    );
+    let isValidatedFromServer;
+    if (purchase?.autoRenewingAndroid) {
+      isValidatedFromServer = await subscriptionServerValidation(
+        urls.appName,
+        purchase?.productId,
+        purchase?.purchaseToken!,
+      );
+    } else {
+      isValidatedFromServer = await purchaseServerValidation(
+        urls.appName,
+        purchase?.productId,
+        purchase?.purchaseToken!,
+      );
+    }
 
-    console.log('isValidatedFromServer : ', isValidatedFromServer?.data);
     if (!isValidatedFromServer?.data?.success) {
       return false;
     } else {
-      return updatePaymentLocally(purchase, isValidatedFromServer);
+      const data = isValidatedFromServer?.data?.data;
+      const validatedData = {
+        purchaseDate: data?.startTimeMillis || data?.purchaseTimeMillis,
+        expiresDate: data?.expiryTimeMillis,
+        originalPurchaseDate: data?.startTimeMillis || data?.purchaseTimeMillis,
+        productId: purchase?.productId,
+        transactionId: purchase?.transactionId,
+        originalTransactionId: purchase?.transactionId,
+        type: purchase?.autoRenewingAndroid
+          ? 'Subscription'
+          : 'One Time Purchase',
+        cancelReason: data?.cancelReason ?? null,
+      };
+      return updatePaymentLocally(purchase, validatedData);
     }
   } else {
     if (isIosStorekit2()) {
-      // IapIosSk2.latestTransaction("")
-      const iosValidationResponse = jwtDecode(purchase.verificationResultIOS!);
+      const iosValidationResponse = jwtDecode(
+        purchase?.verificationResultIOS! || purchase?.verificationResult,
+      );
       console.log('iosValidationResponse : ', iosValidationResponse);
       return updatePaymentLocally(purchase, iosValidationResponse);
     } else {
@@ -592,18 +339,30 @@ const validateSubscription = async (purchase: Purchase) => {
         'Validate Receipt Response from listener : ',
         iosValidationResponse,
       );
+      // const subDetail: SubsProp = {
+      //   purchaseDate: 1,
+      //   originalPurchaseDate: 2,
+      //   expiresDate: 2,
+      //   productId: '',
+      //   transactionId: 1,
+      //   originalTransactionId: 2,
+      //   type: '',
+      // };
       return updatePaymentLocally(purchase, iosValidationResponse);
     }
   }
 };
 
 const updatePaymentLocally = (purchase: Purchase, subDetail: SubsProp) => {
-  console.log('detail : ', purchase);
+  console.log('detail : ', subDetail);
   const currentDate = new Date();
   const validatedLocalData = {
-    type: 'GoogleInAppSubscriptionPurchase',
-    from: new Date(Number(subDetail?.purchaseDate)),
-    to: new Date(Number(subDetail?.expiresDate)),
+    from: subDetail?.purchaseDate
+      ? new Date(Number(subDetail?.purchaseDate))
+      : null,
+    to: subDetail?.expiresDate
+      ? new Date(Number(subDetail?.expiresDate))
+      : null,
     token: purchase?.purchaseToken,
     packageName: urls?.appName,
     originalPurchaseDate: subDetail?.originalPurchaseDate,
@@ -612,13 +371,20 @@ const updatePaymentLocally = (purchase: Purchase, subDetail: SubsProp) => {
     transactionId: subDetail?.transactionId,
     originalTransactionId: subDetail?.originalTransactionId,
     subscriptionType: subDetail?.type,
+    cancelReason: subDetail?.cancelReason,
   };
 
   console.log('updating local : ', validatedLocalData);
-  if (new Date(validatedLocalData?.to) >= currentDate) {
-    // save data locally
-    storage.set(keyName, JSON.stringify(validatedLocalData));
+  if (
+    validatedLocalData?.to &&
+    new Date(validatedLocalData?.to) >= currentDate &&
+    validatedLocalData.subscriptionType === 'Subscription'
+  ) {
+    storage.set(subscriptionKey, JSON.stringify(validatedLocalData));
 
+    return true;
+  } else if (validatedLocalData.subscriptionType !== 'Subscription') {
+    storage.set(productKey, JSON.stringify(validatedLocalData));
     return true;
   } else {
     return false;
@@ -631,20 +397,28 @@ const getAvailablePurchase = async () => {
 
     if (isIosStorekit2()) {
       // Loop through each SKU and get the latest transaction
-      for (const sku of skus) {
-        const transaction = await IapIosSk2.currentEntitlement(sku);
-        if (transaction && new Date(transaction.expirationDate) >= new Date()) {
-          updatePaymentLocally(purchases[0], {
-            purchaseDate: transaction.purchaseDate,
-            expiresDate: transaction.expirationDate,
-            productId: transaction.productID,
-            transactionId: transaction.id,
-            type: transaction.offerType,
-            originalPurchaseDate: transaction.originalPurchaseDate,
-            originalTransactionId: transaction.id,
-          });
+      for (const sku of subSkus) {
+        try {
+          const transaction = await IapIosSk2.currentEntitlement(sku);
+          if (
+            transaction &&
+            new Date(transaction.expirationDate) >= new Date()
+          ) {
+            updatePaymentLocally(purchases[0], {
+              purchaseDate: transaction.purchaseDate,
+              expiresDate: transaction.expirationDate,
+              productId: transaction.productID,
+              transactionId: transaction.id,
+              type: transaction.offerType,
+              originalPurchaseDate: transaction.originalPurchaseDate,
+              originalTransactionId: transaction.id,
+              cancelReason: null,
+            });
+          }
+          transaction && purchases.push(transaction);
+        } catch (error) {
+          console.log('Error in getting available purchases : ', error);
         }
-        transaction && purchases.push(transaction)
       }
     } else {
       // StoreKit 1: Restore all purchases
@@ -661,11 +435,31 @@ const getAvailablePurchase = async () => {
 
 const getSubscription = async () => {
   try {
-    const subs = await getSubscriptions({skus: skus});
+    const subs = await getSubscriptions({skus: subSkus});
     return subs;
   } catch (error) {
     console.log('Error in getting subscriptions: ', error);
     return null;
+  }
+};
+
+const getAllProducts = async () => {
+  try {
+    const products = await getProducts({skus: prodSkus});
+    return products;
+  } catch (error) {
+    console.log('Error in getting products : ', error);
+    return null;
+  }
+};
+
+const iapRequestPurchase = async (sku: string) => {
+  try {
+    const response = await requestPurchase({skus: [sku]});
+    return response;
+  } catch (error) {
+    console.log('Error in iapRequestPurchase : ', error);
+    return false;
   }
 };
 
@@ -732,21 +526,9 @@ const fetchSubscriptions = async () => {
         return false;
       }
       res?.map((sub: any) => {
-        if (Platform.OS === OS.android) {
-          let subscribe =
-            sub.subscriptionOfferDetails[0].pricingPhases.pricingPhaseList[0];
-          subscriptionsDetail.push(subscribe);
-        } else {
-          subscriptionsDetail.push(sub);
-        }
+        subscriptionsDetail.push(sub);
       });
-      if (subscriptionsDetail.length > 0) {
-        let save = 0;
-        save =
-          (subscriptionsDetail[0].micros * 12 - subscriptionsDetail[0].micros) /
-          1000000;
-        subscriptionsDetail[0].saved = save;
-      }
+
       return subscriptionsDetail;
     })
     .catch(error => {
@@ -832,4 +614,6 @@ export {
   hasAppstoreAccount,
   validateSubscription,
   verifyUserSubscriptionValidation,
+  getAllProducts,
+  iapRequestPurchase,
 };
