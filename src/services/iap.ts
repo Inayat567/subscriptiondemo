@@ -158,13 +158,13 @@ export const getNonRenowingSubscriptionDetails = ():
 
   let durationYears = 0;
   if (
-    parsedData.productId === 'mode_1_2y' ||
-    parsedData.productId === 'mode_2_2y'
+    parsedData.productId === 'mode1_2yr_onetime' ||
+    parsedData.productId === 'mode2_2yr_onetime'
   )
     durationYears = 2;
   else if (
-    parsedData.productId === 'mode_1_3y' ||
-    parsedData.productId === 'mode_2_3y'
+    parsedData.productId === 'mode1_3yr_onetime' ||
+    parsedData.productId === 'mode2_3yr_onetime'
   )
     durationYears = 3;
 
@@ -172,16 +172,7 @@ export const getNonRenowingSubscriptionDetails = ():
     fromDate.getTime() + durationYears * 365 * 24 * 60 * 60 * 1000;
   const expiryDate = new Date(expiryTimestamp);
 
-  const formattedExpiryDate = expiryDate.toLocaleString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true,
-  });
+  const formattedExpiryDate = expiryDate.toLocaleString();
 
   return {
     ...parsedData,
