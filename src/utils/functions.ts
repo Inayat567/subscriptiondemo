@@ -22,12 +22,12 @@ export const formatIOSSubscriptions = subscriptions => {
     title: 'Subscriptions',
     data: subscriptions.map(sub => ({
       title: sub.title,
-      price: sub.localizedPrice, // Same as Android's localizedPrice
+      price: sub.localizedPrice,
       description: sub.description,
       productId: sub.productId,
       productType: sub.type, // "subs" or "inapp"
       subscriptionPeriod: `${sub.subscriptionPeriodNumberIOS} ${sub.subscriptionPeriodUnitIOS}`, // E.g., "1 MONTH" or "1 YEAR"
-      introductoryPrice: sub.introductoryPriceAsAmountIOS || 'N/A', // Handle undefined case
+      introductoryPrice: sub.introductoryPriceAsAmountIOS || 'N/A',
       currency: sub.currency || 'USD', // Default to USD if empty
     })),
   };
@@ -38,17 +38,24 @@ export const formatAndroidSubscriptions = (
 ) => {
   return {
     title: 'Subscriptions',
-    data: subscriptions.map((sub: SubscriptionAndroid) => {
-      const price =
-        sub.subscriptionOfferDetails?.[0]?.pricingPhases?.pricingPhaseList?.[0]
-          ?.formattedPrice || 'N/A';
-      return {
-        title: sub.name,
-        price,
-        description: sub.description,
-        productId: sub.productId,
-        productType: sub.productType,
-      };
+    data: subscriptions.flatMap((sub: SubscriptionAndroid) => {
+      return (
+        sub.subscriptionOfferDetails?.map(offer => {
+          const price =
+            offer?.pricingPhases?.pricingPhaseList?.[0]?.formattedPrice ||
+            'N/A';
+          return {
+            title: sub.name,
+            price,
+            description: sub.description,
+            productId: sub.productId,
+            productType: sub.productType,
+            basePlanId: offer.basePlanId,
+            offerId: offer.offerId,
+            offerToken: offer.offerToken,
+          };
+        }) || []
+      );
     }),
   };
 };

@@ -80,6 +80,7 @@ const Product = () => {
       if (selectedPlan?.productType === 'subs') {
         const hasSubscription = await iapRequestSubscription(
           selectedPlan.productId,
+          selectedPlan?.offerToken,
         );
         if (hasSubscription) {
           Alert.alert(
@@ -116,19 +117,22 @@ const Product = () => {
     index: number;
   }) => (
     <View style={styles.page} key={index}>
-      <Text style={styles.pageTitle}>{item.title}</Text>
+      <Text style={styles.pageTitle}>{item?.title}</Text>
       {item.data.map((sub: FormattedSubscription, index: number) => (
         <TouchableOpacity
           key={index}
           style={[
             styles.subscriptionItem,
-            selectedPlan?.title === sub.title &&
+            ((Platform.OS === OS.ios &&
+              selectedPlan?.productId === sub.productId) ||
+              (Platform.OS === OS.android &&
+                selectedPlan?.basePlanId === sub?.basePlanId)) &&
               styles.selectedSubscriptionItem,
           ]}
           onPress={() => setSelectedPlan(sub)}>
           <Text style={styles.subscriptionText}>{sub.title}</Text>
           <Text style={styles.subscriptionText}>{sub.price}</Text>
-          <Text style={styles.subscriptionText}>{sub.description}</Text>
+          <Text style={styles.subscriptionText}>{sub.productId}</Text>
         </TouchableOpacity>
       ))}
     </View>

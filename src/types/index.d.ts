@@ -13,6 +13,8 @@ export type FormattedSubscription = {
   introductoryPrice: string;
   currency: string;
   productType: 'subs' | 'inapp';
+  basePlanId?: string;
+  offerToken?: string
 };
 
 export type FormattedSubscriptions = {

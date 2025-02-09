@@ -510,7 +510,7 @@ const iapRequestPurchase = async (sku: string) => {
   }
 };
 
-const iapRequestSubscription = (sku: string) => {
+const iapRequestSubscription = (sku: string, offerToken?: string) => {
   try {
     return getSubscriptions({skus: [sku]})
       .then((subscription: any) => {
@@ -518,10 +518,10 @@ const iapRequestSubscription = (sku: string) => {
         if (subscription?.length === 0) {
           return false;
         }
-        let offerToken =
-          Platform.OS === OS.android &&
-          subscription[0]['subscriptionOfferDetails'][0]['offerToken'];
-        console.log('getSubscription response : ', subscription);
+        // let offerToken =
+        //   Platform.OS === OS.android &&
+        //   subscription[0]['subscriptionOfferDetails'][0]['offerToken'];
+        // console.log('getSubscription response : ', subscription);
         let payload =
           Platform.OS === OS.android
             ? {
