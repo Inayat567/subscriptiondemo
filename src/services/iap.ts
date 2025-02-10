@@ -121,12 +121,16 @@ export const verifyOneTimePurchaseInLocal = (): boolean => {
 
   if (
     localData.productId === 'mode1_2yr_onetime' ||
-    localData.productId === 'mode2_2yr_onetime'
+    localData.productId === 'mode2_2yr_onetime' ||
+    localData.productId === 'mode_1_bi_yearly' ||
+    localData.productId === 'mode_2_2yearly'
   ) {
     return timeDifference < 2 * oneYearInMs;
   } else if (
     localData.productId === 'mode1_3yr_onetime' ||
-    localData.productId === 'mode2_3yr_onetime'
+    localData.productId === 'mode2_3yr_onetime' ||
+    localData.productId === 'mode_1_3y_' ||
+    localData.productId === 'mode_2_3yearly'
   ) {
     return timeDifference < 3 * oneYearInMs;
   }
@@ -154,12 +158,16 @@ export const getNonRenowingSubscriptionDetails = ():
   let durationYears = 0;
   if (
     parsedData.productId === 'mode1_2yr_onetime' ||
-    parsedData.productId === 'mode2_2yr_onetime'
+    parsedData.productId === 'mode2_2yr_onetime' ||
+    parsedData.productId === 'mode_1_bi_yearly' ||
+    parsedData.productId === 'mode_2_2yearly'
   )
     durationYears = 2;
   else if (
     parsedData.productId === 'mode1_3yr_onetime' ||
-    parsedData.productId === 'mode2_3yr_onetime'
+    parsedData.productId === 'mode2_3yr_onetime' ||
+    parsedData.productId === 'mode_1_3y_' ||
+    parsedData.productId === 'mode_2_3yearly'
   )
     durationYears = 3;
 
@@ -502,7 +510,28 @@ const getAllProducts = async () => {
 
 const iapRequestPurchase = async (sku: string) => {
   try {
-    const response = await requestPurchase({skus: [sku]});
+    if (Platform.OS === OS.ios) {
+      const purchases = await getAvailablePurchases();
+      const alreadyOwned = purchases.some(p => p.productId === sku);
+
+      if (alreadyOwned) {
+        console.log('⚠️ User already owns this product.');
+        Alert.alert('You already own this item.');
+        return false;
+      }
+    }
+    console.log('sku : ', sku);
+    const params = Platform.select({
+      ios: {
+        sku,
+        andDangerouslyFinishTransactionAutomaticallyIOS: false,
+      },
+      android: {
+        skus: [sku],
+      },
+    });
+
+    const response = await requestPurchase(params);
     return response;
   } catch (error) {
     console.log('Error in iapRequestPurchase : ', error);
@@ -514,14 +543,9 @@ const iapRequestSubscription = (sku: string, offerToken?: string) => {
   try {
     return getSubscriptions({skus: [sku]})
       .then((subscription: any) => {
-        console.log('ID : ', sku, subscription);
         if (subscription?.length === 0) {
           return false;
         }
-        // let offerToken =
-        //   Platform.OS === OS.android &&
-        //   subscription[0]['subscriptionOfferDetails'][0]['offerToken'];
-        // console.log('getSubscription response : ', subscription);
         let payload =
           Platform.OS === OS.android
             ? {
@@ -603,7 +627,7 @@ const verifyUserSubscriptionValidation = async () => {
   if (verifySubscriptionsInLocal()) {
     return true;
   } else {
-    let availablePurchases = await getAvailablePurchase();
+    let availablePurchases = await getAvailablePurchase(true);
     return availablePurchases > 0;
   }
 };

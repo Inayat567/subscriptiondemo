@@ -12,7 +12,6 @@ import {
 import {
   fetchSubscriptions,
   getAllProducts,
-  getHistory,
   handleRestore,
   iapRequestPurchase,
   iapRequestSubscription,
@@ -22,17 +21,15 @@ import {
   colors,
   formatAndroidProducts,
   formatAndroidSubscriptions,
+  formatIosProducts,
   formatIOSSubscriptions,
   height,
   OS,
   width,
 } from '../../utils';
-import {ParamListBase, useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {FormattedSubscription, FormattedSubscriptions} from '../../types';
 
 const Product = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
   const [selectedPlan, setSelectedPlan] =
     useState<FormattedSubscription | null>(null);
   const [isLoading, setIsloading] = useState(true);
@@ -61,7 +58,9 @@ const Product = () => {
         } else {
           const formattedSubscriptions = formatIOSSubscriptions(subscriptions);
           console.log('formattedSubscriptions : ', formattedSubscriptions);
-          setSubscriptions([formattedSubscriptions]);
+          const formattedProducts = formatIosProducts(products);
+          console.log('formattedProducts : ', formattedProducts);
+          setSubscriptions([formattedSubscriptions, formattedProducts]);
         }
         setIsloading(false);
       } catch (error) {

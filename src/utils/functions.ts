@@ -3,6 +3,20 @@ import {MMKV} from 'react-native-mmkv';
 
 export const storage = new MMKV();
 
+export const formatIosProducts = (products: Product[] | null) => {
+  if (!products) return null;
+  return {
+    title: 'One-Time Purchases',
+    data: products.map(product => ({
+      title: product.title,
+      price: product.localizedPrice,
+      description: product.productId,
+      productId: product.productId,
+      productType: product?.type,
+    })),
+  };
+};
+
 export const formatAndroidProducts = (products: Product[] | null) => {
   if (!products) return null;
   return {
