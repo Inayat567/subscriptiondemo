@@ -2,12 +2,18 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Product, ProductDetail} from '../screens';
 import {rootScreens} from '../utils';
+import VideoCaptureScreen from '../screens/CameraVideo';
 
 const Stack = createNativeStackNavigator();
 
 const Root = () => {
   return (
-    <Stack.Navigator initialRouteName={rootScreens.productDetail}>
+    <Stack.Navigator initialRouteName={rootScreens.cameraVideo}>
+      <Stack.Screen
+        name={rootScreens.cameraVideo}
+        component={VideoCaptureScreen}
+      />
+
       <Stack.Screen
         name={rootScreens.productDetail}
         component={ProductDetail}
