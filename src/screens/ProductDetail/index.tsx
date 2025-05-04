@@ -1,5 +1,5 @@
 import {View, Text, TouchableOpacity, ActivityIndicator} from 'react-native';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {PDStyles} from './ProductDetail.styles';
 import {
   ParamListBase,
@@ -17,7 +17,9 @@ import {
   verifySubscriptionsInLocal,
 } from '../../services/iap';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import { ValidatedLocalData } from '../../types';
+import {ValidatedLocalData} from '../../types';
+import { appleHealthService } from '../../services/appleHealthKit';
+import appleHealthKit from 'react-native-health';
 
 const ProductDetail = () => {
   const [isPremiumUser, setIsPremiumUser] = useState(
@@ -30,6 +32,54 @@ const ProductDetail = () => {
   const [isResotringSubscription, setIsRestoringSubscription] = useState(false);
   const [isRestoringProduct, setIsRestoringProduct] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
+
+  useEffect(() => {
+
+    const TestAppleHealthKit = async () => {
+
+    // Check HealthKit availability
+    const isAvailable = await appleHealthService.isHealthKitAvailable();
+    console.log('HealthKit available:', isAvailable);
+
+    // Initialize HealthKit
+    await appleHealthService.initializeHealthKit();
+
+    // Fetch daily step count samples
+    const dailySteps = await appleHealthService.getDailyStepCountSamples(
+      new Date('2025-01-01'),
+      new Date('2025-05-04'),
+    );
+    console.log('Daily steps:', dailySteps);
+
+    // Fetch active energy burned
+    const caloriesBurned = await appleHealthService.getActiveEnergyBurned(
+      new Date('2025-01-01'),
+      new Date('2025-05-04'),
+    );
+    console.log('Calories burned:', caloriesBurned);
+
+    // Fetch height
+    const height = await appleHealthService.getHeight();
+    console.log('Height:', height);
+
+    // Save weight
+    const weightSaved = await appleHealthService.saveWeight(70, new Date());
+    console.log('Weight saved:', weightSaved);
+
+    // Save a workout
+    const workoutSaved = await appleHealthService.saveWorkout(
+      appleHealthKit.Constants.Activities.Running,
+      new Date('2025-05-04T10:00:00'),
+      new Date('2025-05-04T11:00:00'),
+      500, // 500 calories
+      5000, // 5000 meters
+    );
+    console.log('Workout saved:', workoutSaved);
+  }
+
+
+    TestAppleHealthKit()
+  }, []);
 
   useFocusEffect(
     useCallback(() => {

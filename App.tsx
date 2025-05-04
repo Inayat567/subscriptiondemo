@@ -16,6 +16,7 @@ import {
 } from './src/services/iap';
 import {setup} from 'react-native-iap';
 import {OS} from './src/utils';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const App = (): React.JSX.Element => {
   useEffect(() => {
@@ -51,12 +52,12 @@ const App = (): React.JSX.Element => {
   };
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <StatusBar barStyle={'dark-content'} />
       <NavigationContainer>
         <Root />
       </NavigationContainer>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
